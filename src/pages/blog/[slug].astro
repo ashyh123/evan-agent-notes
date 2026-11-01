@@ -132,10 +132,24 @@ const related = getPosts()
       aria-valuenow="0"
       hidden
     >
-      <span class="reading-progress-value" data-reading-value>
-        0%
+      <svg
+        class="reading-progress-outline"
+        viewBox="0 0 56 56"
+        aria-hidden="true"
+      >
+        <path d="M28 3H41a12 12 0 0 1 12 12v26a12 12 0 0 1-12 12H15A12 12 0 0 1 3 41V15A12 12 0 0 1 15 3Z" />
+        <path
+          class="reading-progress-trace"
+          pathLength="100"
+          d="M28 3H41a12 12 0 0 1 12 12v26a12 12 0 0 1-12 12H15A12 12 0 0 1 3 41V15A12 12 0 0 1 15 3Z"
+        />
+      </svg>
+      <span class="reading-progress-readout" aria-hidden="true">
+        <span class="reading-progress-value" data-reading-value>
+          0
+        </span>
+        <span class="reading-progress-unit">%</span>
       </span>
-      <span class="reading-progress-label">阅读</span>
     </div>
   </>
 </Layout>
@@ -227,7 +241,7 @@ const related = getPosts()
             ? Math.max(0, Math.min(1, -bounds.top / distance))
             : Number(bounds.bottom <= window.innerHeight);
         const percent = Math.round(ratio * 100);
-        value.textContent = `${percent}%`;
+        value.textContent = String(percent);
         progress.setAttribute("aria-valuenow", String(percent));
         progress.style.setProperty("--reading-progress", String(ratio));
         progress.hidden = false;
@@ -259,41 +273,50 @@ const related = getPosts()
     bottom: calc(24px + env(safe-area-inset-bottom, 0px));
     z-index: 90;
     display: grid;
-    align-content: center;
-    justify-items: center;
-    gap: 4px;
-    width: 52px;
-    height: 52px;
-    overflow: hidden;
-    border: 1px solid var(--line);
-    border-radius: 6px;
-    background: var(--paper);
+    place-items: center;
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
+    background: color-mix(in srgb, var(--paper) 86%, transparent);
     color: var(--ink);
-    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.12);
+    box-shadow: 0 4px 20px rgba(12, 30, 55, 0.06);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
     pointer-events: none;
     user-select: none;
   }
-  .reading-progress::before {
-    content: "";
+  .reading-progress-outline {
     position: absolute;
     inset: 0;
-    background: color-mix(in srgb, var(--accent) 18%, transparent);
-    transform: scaleY(var(--reading-progress, 0));
-    transform-origin: bottom;
+    width: 100%;
+    height: 100%;
+    fill: none;
+    stroke: var(--line);
+    stroke-width: 1;
   }
-  .reading-progress > span {
+  .reading-progress-trace {
+    stroke: var(--accent-dark);
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-dasharray: 100;
+    stroke-dashoffset: calc(100 - var(--reading-progress, 0) * 100);
+  }
+  .reading-progress-readout {
     position: relative;
+    display: flex;
+    align-items: baseline;
+    gap: 1px;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
   }
   .reading-progress-value {
     font-size: 16px;
-    font-weight: 600;
-    font-variant-numeric: tabular-nums;
-    line-height: 1.1;
+    font-weight: 500;
+    letter-spacing: -0.03em;
   }
-  .reading-progress-label {
+  .reading-progress-unit {
     color: var(--muted);
     font-size: 10px;
-    line-height: 1.1;
   }
   .prose .interactive-diagram {
     margin: 28px 0;
@@ -316,10 +339,14 @@ const related = getPosts()
   }
   @media (max-width: 700px) {
     .reading-progress {
-      right: 12px;
-      bottom: calc(12px + env(safe-area-inset-bottom, 0px));
-      width: 46px;
-      height: 46px;
+      right: 14px;
+      bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+      width: 50px;
+      height: 50px;
+      border-radius: 14px;
+    }
+    .reading-progress-value {
+      font-size: 15px;
     }
     .interactive-diagram iframe {
       height: 460px;
