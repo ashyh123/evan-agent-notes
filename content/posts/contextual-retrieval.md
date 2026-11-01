@@ -57,8 +57,6 @@ Anthropic 提出的处理发生在建立索引之前。语言模型同时看到�
 
 [![入库流程对照：普通 RAG 与补充上下文后的索引建立过程](/images/posts/contextual-retrieval/rag-indexing.png)](/diagrams/rag-indexing-interactive.html)
 
-[打开入库流程交互图，可放大并点按查看说明](/diagrams/rag-indexing-interactive.html)
-
 ## 入库与提问，是两个不同阶段
 
 入库时，系统完成切块、补背景和建立索引，同时保存每个块的原文位置。处理好的资料可以被多次查询使用，文档更新后再更新受影响的部分。理解这个时间关系，就不会把所有模型调用都算到每次提问上。
@@ -70,8 +68,6 @@ Anthropic 提出的处理发生在建立索引之前。语言模型同时看到�
 因此，初步查找多少候选，与最终把多少块交给生成模型，是两个可以分别设置的数量。最后，生成模型接收用户问题和筛选后的材料，形成回答。给块补背景与增加重排属于不同改进，也可以分别评估。
 
 [![查询流程：语义检索与关键词检索，融合去重、可选重排、筛选资料和生成回答](/images/posts/contextual-retrieval/rag-query.png)](/diagrams/rag-query-interactive.html)
-
-[打开查询流程交互图，可放大并点按查看说明](/diagrams/rag-query-interactive.html)
 
 ## 额外成本要看发生在哪里
 
