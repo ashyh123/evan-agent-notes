@@ -48,9 +48,6 @@ const { posts, tags } = Astro.props;
       <p>发布文章后，标签会出现在这里。</p>
     )}
   </aside>
-  <div class="blog-upcoming">
-    <slot />
-  </div>
   <aside class="blog-note block-surface" data-tone="sage">
     <h2>一起走这段路</h2>
     <p>从小项目出发，记录 Agent，也记录构建它所需的工程知识。</p>
@@ -65,11 +62,12 @@ const { posts, tags } = Astro.props;
   .blog-layout {
     display: grid;
     grid-template-columns: minmax(0, 1fr) 285px;
+    grid-template-rows: auto 1fr;
     gap: 20px;
     align-items: start;
   }
   .blog-posts {
-    grid-row: span 3;
+    grid-row: span 2;
     min-width: 0;
   }
   .list-caption {

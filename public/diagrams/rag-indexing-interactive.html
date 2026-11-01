@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>入库流程：普通 RAG 与上下文检索</title>
+<style>
+  :root{color-scheme:light;--paper:#f5f7f3;--ink:#27473b;--muted:#687a6e;--line:#d9e3d8;--accent:#317456}
+  *{box-sizing:border-box}
+  html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--paper);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif}
+  button{font:inherit;color:inherit;-webkit-tap-highlight-color:transparent}
+  .viewer{height:100vh;height:100dvh;width:100%;display:grid;grid-template-rows:minmax(0,1fr) 44px;overflow:hidden}
+  .viewport{position:relative;min-width:0;min-height:0;overflow:hidden;overscroll-behavior:contain;touch-action:pan-x pan-y;scrollbar-color:#b8c8bb var(--paper)}
+  .world{position:relative;min-width:1px;min-height:1px;overflow:hidden}
+  .diagram{position:absolute;transform-origin:0 0;isolation:isolate}
+  .diagram img{position:absolute;inset:0;width:100%;height:100%;display:block;user-select:none;-webkit-user-drag:none;pointer-events:none}
+  .hotspot{position:absolute;display:block;margin:0;padding:0;border:0;background:transparent;border-radius:24px;cursor:pointer;outline:0;box-shadow:none}
+  .hotspot:hover{background:rgba(49,116,86,.055);box-shadow:inset 0 0 0 4px rgba(49,116,86,.62)}
+  .hotspot.is-active{background:rgba(49,116,86,.065);box-shadow:inset 0 0 0 5px var(--accent)}
+  .hotspot:focus-visible{box-shadow:inset 0 0 0 6px var(--accent);background:rgba(49,116,86,.065)}
+  .toolbar{display:flex;align-items:center;justify-content:center;gap:6px;min-width:0;padding:5px 10px;border-top:1px solid var(--line);background:var(--paper);z-index:3}
+  .hint{font-size:12px;color:var(--muted);margin-right:auto;white-space:nowrap}
+  .tool{height:32px;min-width:50px;padding:0 11px;border:1px solid transparent;border-radius:7px;background:transparent;font-size:13px;line-height:1;cursor:pointer;white-space:nowrap}
+  .tool:hover:not(:disabled){background:#e6ede4;border-color:#c7d6c8}
+  .tool:focus-visible,.close:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .tool:disabled{opacity:.35;cursor:default}
+  .tool.fit{background:#e8efe5;border-color:#d6e0d3}
+  .scale{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;min-width:44px;text-align:right;margin-left:auto}
+  .info{position:fixed;z-index:10;width:360px;max-width:calc(100vw - 20px);max-height:calc(100vh - 70px);max-height:calc(100dvh - 70px);overflow:auto;padding:17px 42px 16px 17px;border:1px solid #bdd0be;border-radius:12px;background:#fff;box-shadow:0 7px 28px #213d2d22;overflow-wrap:anywhere}
+  .info[hidden]{display:none!important}
+  .info h2{font-size:16px;font-weight:650;line-height:1.45;margin:0 0 7px}
+  .info p{font-size:14px;line-height:1.65;color:#4a6254;margin:0}
+  .close{position:absolute;right:6px;top:7px;width:32px;height:32px;padding:0;border:0;background:transparent;font-size:25px;line-height:1;color:#667e6d;border-radius:6px;cursor:pointer}
+  .close:hover{background:#edf3eb}
+  @media(max-width:460px){.hint{display:none}.toolbar{gap:7px}.scale{margin-left:8px;text-align:left}.tool{min-width:58px}.info{padding:14px 40px 14px 14px}.info h2{font-size:15px}.info p{font-size:13px}}
+  @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<main class="viewer" aria-label="入库流程：普通 RAG 与上下文检索">
+  <div class="viewport" id="viewport" aria-label="流程图，可放大后滚动查看">
+    <div class="world" id="world">
+      <div class="diagram" id="diagram" style="width:1600px;height:1250px">
+        <img width="1600" height="1250" alt="入库流程对照图。左侧将原始块直接建立两种索引，右侧先结合全文补背景，再与原始块一起建立两种索引。各步骤可点按查看说明。" src="/images/posts/contextual-retrieval/rag-indexing.png" draggable="false">
+        <button type="button" class="hotspot" data-step="ordinary-doc" aria-label="普通 RAG：完整文档：查看说明" aria-expanded="false" aria-controls="info" aria-haspopup="dialog" style="left:120px;top:395px;width:590px;height:115px"></button>
+        <button type="button" class="hotspot" data-step="ordinary-chunk" aria-label="普通 RAG：原始文本块：查看说明" aria-expanded="false" aria-controls="info" aria-haspopup="dialog" style="left:120px;top:625px;width:590px;height:140px"></button>
+        <button type="button" class="hotspot" data-step="ordinary-vector" aria-label="普通 RAG：语义向量索引：查看说明" aria-expanded="false" aria-controls="info" aria-haspopup="dialog" style="left:110px;top:915px;width:290px;height:135px"></button>
+        <button type="button" class="hotspot" data-step="ordinary-keyword" aria-label="普通 RAG：关键词索引：查看说明" aria-expanded="false" aria-controls="info" aria-haspopup="dialog" style="left:430px;top:915px;width:290px;height:135px"></button>
+        <button type="button" class="hotspot" data-step="context-doc" aria-label="上下文检索：完整文档：查看说明" aria-expanded="false" aria-controls="info" aria-haspopup="dialog" style="left:885px;top:355px;width:270px;height:110px"></button>
+        <button type="button" class="hotspot" data-step="context-chunk" aria-label="上下文检索：当前原始块：查看说明" aria-expanded="false" aria-controls="info" aria-haspopup="dialog" style="left:1215px;top:355px;width:270px;height:110px"></button>
+        <button type="button" class="hotspot" data-step="context-model" aria-label="模型生成必要背景：查看说明" aria-expanded="false" aria-controls="info" aria-haspopup="dialog" style="left:885px;top:535px;width:600px;height:115px"></button>
+        <button type="button" class="hotspot" data-step="context-pair" aria-label="背景说明与原始块：查看说明" aria-expanded="false" aria-controls="info" aria-haspopup="dialog" style="left:885px;top:695px;width:600px;height:115px"></button>
+        <button type="button" class="hotspot" data-step="context-vector" aria-label="带背景的语义向量索引：查看说明" aria-expanded="false" aria-controls="info" aria-haspopup="dialog" style="left:875px;top:915px;width:300px;height:135px"></button>
+        <button type="button" class="hotspot" data-step="context-keyword" aria-label="带背景的关键词索引：查看说明" aria-expanded="false" aria-controls="info" aria-haspopup="dialog" style="left:1195px;top:915px;width:300px;height:135px"></button>
+      </div>
+    </div>
+  </div>
+  <div class="toolbar" role="toolbar" aria-label="流程图显示控制">
+    <span class="hint">点击步骤查看说明</span>
+    <button class="tool" id="zoom-out" type="button" aria-label="缩小流程图" disabled>缩小</button>
+    <button class="tool fit" id="fit" type="button" aria-label="恢复全图显示">全图</button>
+    <button class="tool" id="zoom-in" type="button" aria-label="放大流程图">放大</button>
+    <output class="scale" id="scale" aria-label="相对于全图显示的缩放比例" aria-live="polite">全图</output>
+  </div>
+</main>
+<section class="info" id="info" role="dialog" aria-modal="false" aria-labelledby="info-title" aria-describedby="info-body" hidden>
+  <button class="close" id="close-info" type="button" aria-label="关闭步骤说明">×</button>
+  <h2 id="info-title"></h2>
+  <p id="info-body"></p>
+</section>
+<script>
+(() => {
+  'use strict';
+  const W = 1600, H = 1250;
+  const details = {"ordinary-doc":{"title":"普通 RAG：完整文档","text":"知识库中的完整资料。按段落、标题等内容边界切成较小的文本块，方便后续检索。"},"ordinary-chunk":{"title":"普通 RAG：原始文本块","text":"每个块保留原始文字和来源。普通流程直接用这个块建立索引，不额外生成背景说明。"},"ordinary-vector":{"title":"普通 RAG：语义向量索引","text":"嵌入模型将原始块编码成向量。用户提问后，系统通过向量相似度寻找相关内容。"},"ordinary-keyword":{"title":"普通 RAG：关键词索引","text":"记录原始块中的词项与统计信息。查询时，关键词检索据此匹配名称、术语等线索。"},"context-doc":{"title":"上下文检索：完整文档","text":"全文为当前块提供主体、时间、章节与条件等背景。补充说明应有全文依据。"},"context-chunk":{"title":"上下文检索：当前原始块","text":"先完成切块，再逐块处理。把当前块与完整文档一起交给模型，明确要解释的是哪一段。"},"context-model":{"title":"模型生成必要背景","text":"语言模型根据全文，为当前块生成短背景。这一步通常在入库时完成，后续查询可以复用。"},"context-pair":{"title":"背景说明与原始块","text":"把简短说明加在原始块前面，一起建立索引。原始块完整保留，不用生成内容替换原文。"},"context-vector":{"title":"带背景的语义向量索引","text":"嵌入模型对背景说明与原始块整体编码，让向量表示包含必要语境。效果仍需评测。"},"context-keyword":{"title":"带背景的关键词索引","text":"补充说明里的词也进入索引，例如主体名称或版本号。背景若有误，也可能导致错误匹配。"}};
+  const viewport = document.getElementById('viewport');
+  const world = document.getElementById('world');
+  const diagram = document.getElementById('diagram');
+  const info = document.getElementById('info');
+  const infoTitle = document.getElementById('info-title');
+  const infoBody = document.getElementById('info-body');
+  const closeButton = document.getElementById('close-info');
+  const zoomIn = document.getElementById('zoom-in');
+  const zoomOut = document.getElementById('zoom-out');
+  const fitButton = document.getElementById('fit');
+  const scaleLabel = document.getElementById('scale');
+  const hotspots = Array.from(document.querySelectorAll('.hotspot'));
+  let zoom = 1;
+  let renderedScale = 0;
+  let stageX = 0, stageY = 0;
+  let selected = null;
+  let frame = 0;
+  const clamp = (v, lo, hi) => Math.max(lo, Math.min(Math.max(lo, hi), v));
+
+  function placeInfo() {
+    if (info.hidden || !selected) return;
+    const target = selected.getBoundingClientRect();
+    const bounds = viewport.getBoundingClientRect();
+    const pw = info.offsetWidth, ph = info.offsetHeight;
+    const x = clamp((target.left + target.right - pw) / 2, 10, window.innerWidth - pw - 10);
+    let y = target.top - ph - 10;
+    if (y < 10) y = target.bottom + 10;
+    if (y + ph > bounds.bottom - 10) y = (target.top + target.bottom - ph) / 2;
+    y = clamp(y, 10, bounds.bottom - ph - 10);
+    info.style.left = x + 'px';
+    info.style.top = y + 'px';
+  }
+
+  function closeInfo(restoreFocus) {
+    const previous = selected;
+    info.hidden = true;
+    if (previous) {
+      previous.classList.remove('is-active');
+      previous.setAttribute('aria-expanded', 'false');
+    }
+    selected = null;
+    if (restoreFocus && previous) previous.focus({preventScroll:true});
+  }
+
+  function openInfo(button) {
+    if (selected === button && !info.hidden) { closeInfo(true); return; }
+    closeInfo(false);
+    const detail = details[button.dataset.step];
+    if (!detail) return;
+    selected = button;
+    selected.classList.add('is-active');
+    selected.setAttribute('aria-expanded', 'true');
+    infoTitle.textContent = detail.title;
+    infoBody.textContent = detail.text;
+    info.hidden = false;
+    placeInfo();
+    closeButton.focus({preventScroll:true});
+  }
+
+  function layout(keepCenter) {
+    const oldW = viewport.clientWidth, oldH = viewport.clientHeight;
+    const centerX = renderedScale > 0 ? (viewport.scrollLeft + oldW / 2 - stageX) / renderedScale : W / 2;
+    const centerY = renderedScale > 0 ? (viewport.scrollTop + oldH / 2 - stageY) / renderedScale : H / 2;
+    viewport.style.overflow = zoom <= 1.001 ? 'hidden' : 'auto';
+    const bounds = viewport.getBoundingClientRect();
+    const vw = Math.max(1, bounds.width), vh = Math.max(1, bounds.height);
+    const fitScale = Math.max(.001, Math.min((vw - 12) / W, (vh - 12) / H));
+    renderedScale = fitScale * zoom;
+    const iw = W * renderedScale, ih = H * renderedScale;
+    const ww = Math.max(vw, iw), wh = Math.max(vh, ih);
+    world.style.width = ww + 'px';
+    world.style.height = wh + 'px';
+    stageX = Math.max(0, (ww - iw) / 2);
+    stageY = Math.max(0, (wh - ih) / 2);
+    diagram.style.left = stageX + 'px';
+    diagram.style.top = stageY + 'px';
+    diagram.style.transform = 'scale(' + renderedScale + ')';
+    if (zoom <= 1.001) {
+      viewport.scrollLeft = 0;
+      viewport.scrollTop = 0;
+    } else if (keepCenter) {
+      viewport.scrollLeft = clamp(centerX * renderedScale + stageX - viewport.clientWidth / 2, 0, ww - viewport.clientWidth);
+      viewport.scrollTop = clamp(centerY * renderedScale + stageY - viewport.clientHeight / 2, 0, wh - viewport.clientHeight);
+    }
+    zoomOut.disabled = zoom <= 1.001;
+    zoomIn.disabled = zoom >= 3.999;
+    scaleLabel.textContent = zoom <= 1.001 ? '全图' : Math.round(zoom * 100) + '%';
+    placeInfo();
+  }
+
+  function scheduleLayout() {
+    if (frame) cancelAnimationFrame(frame);
+    frame = requestAnimationFrame(() => { frame = 0; layout(true); });
+  }
+
+  hotspots.forEach(button => button.addEventListener('click', () => openInfo(button)));
+  closeButton.addEventListener('click', () => closeInfo(true));
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && !info.hidden) { event.preventDefault(); closeInfo(true); }
+  });
+  document.addEventListener('pointerdown', event => {
+    if (!info.hidden && !info.contains(event.target) && !event.target.closest('.hotspot')) closeInfo(false);
+  });
+  zoomIn.addEventListener('click', () => { zoom = Math.min(4, zoom * 1.25); layout(true); });
+  zoomOut.addEventListener('click', () => { zoom = Math.max(1, zoom / 1.25); if (zoom < 1.01) zoom = 1; layout(true); });
+  fitButton.addEventListener('click', () => { closeInfo(false); zoom = 1; layout(false); });
+  viewport.addEventListener('scroll', placeInfo, {passive:true});
+  window.addEventListener('resize', scheduleLayout);
+  if (typeof ResizeObserver === 'function') new ResizeObserver(scheduleLayout).observe(viewport);
+  layout(false);
+})();
+</script>
+</body>
+</html>
