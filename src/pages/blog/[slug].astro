@@ -62,7 +62,7 @@ const related = getPosts()
     </header>
     <div class="reading-layout article-layout">
       <article>
-        <div class="prose" set:html={html} />
+        <div class="prose" data-reading-body set:html={html} />
         <div class="article-contact">
           <h2>一起交流</h2>
           <p>你也遇到过类似的问题吗？欢迎分享你的实践。</p>
@@ -121,6 +121,21 @@ const related = getPosts()
           )}
         </details>
       </aside>
+    </div>
+    <div
+      class="reading-progress"
+      data-reading-progress
+      role="progressbar"
+      aria-label="文章阅读进度"
+      aria-valuemin="0"
+      aria-valuemax="100"
+      aria-valuenow="0"
+      hidden
+    >
+      <span class="reading-progress-value" data-reading-value>
+        0%
+      </span>
+      <span class="reading-progress-label">阅读</span>
     </div>
   </>
 </Layout>
@@ -195,10 +210,91 @@ const related = getPosts()
         figure.append(panel);
         select(0);
       });
+
+    const body = document.querySelector<HTMLElement>("[data-reading-body]");
+    const progress = document.querySelector<HTMLElement>(
+      "[data-reading-progress]",
+    );
+    const value = progress?.querySelector<HTMLElement>("[data-reading-value]");
+    if (body && progress && value) {
+      let frame = 0;
+      const update = () => {
+        frame = 0;
+        const bounds = body.getBoundingClientRect();
+        const distance = bounds.height - window.innerHeight;
+        const ratio =
+          distance > 0
+            ? Math.max(0, Math.min(1, -bounds.top / distance))
+            : Number(bounds.bottom <= window.innerHeight);
+        const percent = Math.round(ratio * 100);
+        value.textContent = `${percent}%`;
+        progress.setAttribute("aria-valuenow", String(percent));
+        progress.style.setProperty("--reading-progress", String(ratio));
+        progress.hidden = false;
+      };
+      const schedule = () => {
+        if (!frame) frame = requestAnimationFrame(update);
+      };
+      const observer = new ResizeObserver(schedule);
+      observer.observe(body);
+      window.addEventListener("scroll", schedule, { passive: true, signal });
+      window.addEventListener("resize", schedule, { signal });
+      signal.addEventListener(
+        "abort",
+        () => {
+          observer.disconnect();
+          cancelAnimationFrame(frame);
+        },
+        { once: true },
+      );
+      update();
+    }
   });
 </script>
 
 <style is:global>
+  .reading-progress {
+    position: fixed;
+    right: 24px;
+    bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+    z-index: 90;
+    display: grid;
+    align-content: center;
+    justify-items: center;
+    gap: 4px;
+    width: 52px;
+    height: 52px;
+    overflow: hidden;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: var(--paper);
+    color: var(--ink);
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.12);
+    pointer-events: none;
+    user-select: none;
+  }
+  .reading-progress::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: color-mix(in srgb, var(--accent) 18%, transparent);
+    transform: scaleY(var(--reading-progress, 0));
+    transform-origin: bottom;
+  }
+  .reading-progress > span {
+    position: relative;
+  }
+  .reading-progress-value {
+    font-size: 16px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.1;
+  }
+  .reading-progress-label {
+    color: var(--muted);
+    font-size: 10px;
+    line-height: 1.1;
+  }
   .prose .interactive-diagram {
     margin: 28px 0;
     overflow: hidden;
@@ -219,6 +315,12 @@ const related = getPosts()
     line-height: 1.7;
   }
   @media (max-width: 700px) {
+    .reading-progress {
+      right: 12px;
+      bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+      width: 46px;
+      height: 46px;
+    }
     .interactive-diagram iframe {
       height: 460px;
     }
