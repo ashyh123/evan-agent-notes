@@ -45,6 +45,7 @@ import { site } from "../../data/site.js";
       !matchMedia("(prefers-reduced-motion: reduce)").matches
     ) {
       entry.hidden = false;
+      entry.dataset.startedAt = String(performance.now());
       // Content remains usable even if the animation module cannot load.
       setTimeout(() => entry.remove(), 1100);
     }

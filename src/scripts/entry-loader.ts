@@ -85,10 +85,17 @@ onPageChange((signal) => {
     media.dataset.status = "refining";
     const ink = getComputedStyle(media).color;
     const began = performance.now();
+    const duration = Math.max(
+      0,
+      Math.min(720, 800 - (began - Number(entry.dataset.startedAt))),
+    );
     const draw = (now: number) => {
       if (done) return;
       const position =
-        Math.max(0, Math.min(1, (now - began) / 720)) * (levels.length - 1);
+        (duration > 0
+          ? Math.max(0, Math.min(1, (now - began) / duration))
+          : 1) *
+        (levels.length - 1);
       const index = Math.floor(position);
       const fraction = position - index;
       context.clearRect(0, 0, width, height);
@@ -141,7 +148,7 @@ onPageChange((signal) => {
       }
     };
     draw(began);
-    frame = requestAnimationFrame(draw);
+    if (duration > 0) frame = requestAnimationFrame(draw);
   };
   if (image.complete) start();
   else {
