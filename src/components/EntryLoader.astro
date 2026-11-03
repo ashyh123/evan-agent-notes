@@ -1,0 +1,189 @@
+---
+import { site } from "../../data/site.js";
+---
+
+<div class="entry-loader" data-entry-loader hidden>
+  <div class="entry-loader__identity">
+    <div class="entry-frame" data-refine-frame aria-hidden="true">
+      <div class="entry-frame__media">
+        <img src="/images/avatar.png" width="512" height="512" alt="" />
+        <canvas></canvas>
+      </div>
+      <span class="entry-frame__chip">
+        <svg
+          viewBox="0 0 16 16"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.4"
+        >
+          <circle class="entry-frame__spinner" cx="8" cy="8" r="5" />
+          <path class="entry-frame__check" d="m4 8 2.5 2.5L12 5" />
+        </svg>
+        <span data-entry-label>正在展开</span>
+      </span>
+    </div>
+    <p class="entry-loader__name">{site.author}</p>
+    <p class="entry-loader__note">学习、实践，记录一路上的思考。</p>
+  </div>
+  <button class="entry-loader__skip specular-button" type="button">
+    跳过开场 <span aria-hidden="true">↗</span>
+  </button>
+</div>
+
+<script is:inline>
+  {
+    const entry = document.querySelector("[data-entry-loader]");
+    let seen = false;
+    try {
+      seen = sessionStorage.getItem("site-entry-seen") === "1";
+      sessionStorage.setItem("site-entry-seen", "1");
+    } catch {}
+    if (
+      entry &&
+      !seen &&
+      !location.hash &&
+      !matchMedia("(prefers-reduced-motion: reduce)").matches
+    ) {
+      entry.hidden = false;
+      // Content remains usable even if the animation module cannot load.
+      setTimeout(() => entry.remove(), 1100);
+    }
+  }
+</script>
+
+<script>
+  import "../scripts/entry-loader";
+</script>
+
+<style is:global>
+  .entry-loader {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    display: grid;
+    place-items: center;
+    color: var(--ink);
+    background: linear-gradient(
+      180deg,
+      var(--page-gradient-start) 0%,
+      var(--page-gradient-start) 75%,
+      var(--page-gradient-middle) 88%,
+      var(--page-gradient-end) 100%
+    );
+    pointer-events: none;
+    animation: entry-dismiss 180ms ease 900ms forwards;
+  }
+  .entry-loader__identity {
+    text-align: center;
+  }
+  .entry-frame {
+    position: relative;
+    width: min(236px, calc(100vw - 96px));
+    aspect-ratio: 1;
+    margin: 0 auto;
+    overflow: hidden;
+    border: 1px solid color-mix(in srgb, var(--accent) 20%, transparent);
+    border-radius: 24px;
+    background: color-mix(in srgb, var(--accent) 8%, var(--paper));
+  }
+  .entry-frame__media {
+    position: absolute;
+    inset: 18px;
+  }
+  .entry-frame__media img,
+  .entry-frame__media canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+  .entry-frame__media canvas {
+    opacity: 0;
+  }
+  .entry-frame[data-mosaic] img {
+    opacity: 0;
+  }
+  .entry-frame[data-mosaic] canvas {
+    opacity: 1;
+  }
+  .entry-frame[data-status="complete"] img {
+    opacity: 1;
+  }
+  .entry-frame[data-status="complete"] canvas {
+    opacity: 0;
+  }
+  .entry-frame__chip {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 26px;
+    padding: 0 10px 0 8px;
+    border: 1px solid color-mix(in srgb, var(--ink) 9%, transparent);
+    border-radius: 14px;
+    background: color-mix(in srgb, var(--paper) 75%, transparent);
+    backdrop-filter: blur(8px);
+    font-size: 11px;
+  }
+  .entry-frame__chip svg {
+    width: 14px;
+    height: 14px;
+  }
+  .entry-frame__spinner {
+    stroke-dasharray: 23 9;
+    transform-origin: center;
+    animation: entry-spin 1s linear infinite;
+  }
+  .entry-frame__check,
+  .entry-frame[data-status="complete"] .entry-frame__spinner {
+    display: none;
+  }
+  .entry-frame[data-status="complete"] .entry-frame__check {
+    display: block;
+  }
+  .entry-loader__name {
+    margin: 20px 0 5px;
+    font-size: 21px;
+    font-weight: 500;
+  }
+  .entry-loader__note {
+    margin: 0;
+    color: var(--muted);
+    font-size: 13px;
+  }
+  .entry-loader__skip {
+    position: absolute;
+    bottom: calc(28px + env(safe-area-inset-bottom, 0px));
+    display: inline-flex;
+    align-items: center;
+    gap: 18px;
+    min-height: 44px;
+    padding: 8px 16px;
+    border: 1px solid var(--line);
+    border-radius: 24px;
+    color: var(--muted);
+    font: inherit;
+    font-size: 12px;
+    pointer-events: auto;
+    cursor: pointer;
+  }
+  @keyframes entry-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  @keyframes entry-dismiss {
+    to {
+      opacity: 0;
+      visibility: hidden;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .entry-loader {
+      display: none;
+    }
+  }
+</style>
