@@ -2,6 +2,7 @@
 import "../../css/blog.css";
 import "../../css/tailwind.css";
 import "../../css/themes.css";
+import "../../css/specular-button.css";
 import { ClientRouter } from "astro:transitions";
 import MeteorBackground from "../components/MeteorBackground.astro";
 import SiteHeader from "../components/SiteHeader.astro";
@@ -109,4 +110,5 @@ const url = new URL(canonical, siteUrl).href;
 
 <script>
   import "../scripts/transitions";
+  import "../scripts/specular-buttons";
 </script>

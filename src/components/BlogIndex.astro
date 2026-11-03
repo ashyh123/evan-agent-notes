@@ -85,6 +85,7 @@ const { posts, tags } = Astro.props;
     gap: 8px;
   }
   .filter-button {
+    --sb-light: #e5f0ff;
     padding: 7px 12px;
     border: 1px solid color-mix(in srgb, var(--block-ink) 25%, transparent);
     border-radius: 9px;
@@ -92,8 +93,10 @@ const { posts, tags } = Astro.props;
     color: var(--block-ink);
     font-size: 13px;
     line-height: 1.6;
+    transition: box-shadow 180ms ease;
   }
   .filter-button[aria-pressed="true"] {
+    --sb-light: #527caf;
     color: #26354b;
     background: #eaf0f7;
     border-color: transparent;

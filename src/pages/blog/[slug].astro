@@ -214,6 +214,7 @@ const related = getPosts()
           if (!title) return;
           const button = document.createElement("button");
           button.type = "button";
+          button.className = "specular-button";
           button.textContent = title.textContent;
           button.setAttribute("aria-controls", panel.id);
           button.addEventListener("click", () => select(item), { signal });

@@ -1,0 +1,86 @@
+/* SpecularButton-inspired glass and moving rim light, using the site's palette. */
+.specular-button {
+  --sb-light: light-dark(#527caf, #e5f0ff);
+  --sb-angle: 315deg;
+  --sb-near: 0;
+  --sb-x: 25%;
+  --sb-y: 0%;
+  position: relative;
+  isolation: isolate;
+  background-color: color-mix(in srgb, currentColor 4%, transparent);
+  transition:
+    background-color 180ms ease,
+    box-shadow 180ms ease;
+}
+.specular-button::before,
+.specular-button::after {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  pointer-events: none;
+}
+.specular-button::before {
+  padding: 1.2px;
+  background: conic-gradient(
+    from var(--sb-angle),
+    transparent 0deg,
+    var(--sb-light) 10deg,
+    transparent 44deg,
+    transparent 180deg,
+    color-mix(in srgb, var(--sb-light) 45%, transparent) 190deg,
+    transparent 224deg,
+    transparent 360deg
+  );
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  opacity: calc(0.35 + var(--sb-near) * 0.65);
+  transition: opacity 180ms ease;
+}
+.specular-button::after {
+  inset: 0;
+  background: radial-gradient(
+    ellipse at var(--sb-x) var(--sb-y),
+    color-mix(in srgb, var(--sb-light) 16%, transparent),
+    transparent 72%
+  );
+  box-shadow: 0 0 16px color-mix(in srgb, var(--sb-light) 13%, transparent);
+  opacity: var(--sb-near);
+  transition: opacity 180ms ease;
+}
+.specular-button:focus-visible::before,
+.specular-button:active::before,
+.social-links a:focus-visible .specular-button::before {
+  opacity: 1;
+}
+.specular-button:focus-visible::after,
+.specular-button:active::after,
+.social-links a:focus-visible .specular-button::after {
+  opacity: 0.7;
+}
+.specular-button:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 4px;
+}
+.specular-button:is(:disabled, [aria-disabled="true"])::before,
+.specular-button:is(:disabled, [aria-disabled="true"])::after {
+  opacity: 0;
+}
+@media (hover: hover) {
+  .specular-button:hover {
+    background-color: color-mix(in srgb, currentColor 7%, transparent);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .specular-button,
+  .specular-button::before,
+  .specular-button::after {
+    transition: none;
+  }
+}

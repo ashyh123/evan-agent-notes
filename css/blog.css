@@ -537,8 +537,10 @@ button.tag {
 .process-diagram button {
   display: block;
   width: 100%;
-  padding: 0;
-  border: 0;
+  min-height: 44px;
+  padding: 6px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
   text-align: left;
   font: inherit;
   font-size: 14px;
@@ -551,7 +553,6 @@ button.tag {
 .process-diagram button:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 4px;
-  border-radius: 2px;
 }
 .process-diagram button[aria-pressed="true"] {
   color: var(--accent);
