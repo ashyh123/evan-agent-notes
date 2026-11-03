@@ -7,7 +7,6 @@ import { ClientRouter } from "astro:transitions";
 import MeteorBackground from "../components/MeteorBackground.astro";
 import SiteHeader from "../components/SiteHeader.astro";
 import SiteFooter from "../components/SiteFooter.astro";
-import EntryLoader from "../components/EntryLoader.astro";
 import { rssEnabled, site, siteUrl } from "../../data/site.js";
 const {
   title,
@@ -72,7 +71,6 @@ const url = new URL(canonical, siteUrl).href;
     </script>
   </head>
   <body>
-    <EntryLoader />
     <div
       id="site-meteors"
       transition:persist="site-meteors"
