@@ -1,0 +1,185 @@
+<div class="ascii-intro" data-ascii-intro hidden>
+  <div class="ascii-intro__content">
+    <div
+      class="ascii-text"
+      data-ascii-text
+      role="img"
+      aria-label="hello, people"
+    >
+      <canvas aria-hidden="true"></canvas>
+      <p class="ascii-text__fallback" aria-hidden="true">
+        hello,
+        <br />
+        people
+      </p>
+    </div>
+    <p class="ascii-intro__caption">欢迎来到 Evan 的博客</p>
+  </div>
+  <button
+    type="button"
+    class="ascii-intro__skip specular-button"
+    data-intro-skip
+  >
+    进入网站 <span aria-hidden="true">↗</span>
+  </button>
+</div>
+
+<script is:inline>
+  {
+    const intro = document.querySelector("[data-ascii-intro]");
+    let seen = false;
+    try {
+      seen = sessionStorage.getItem("site-ascii-intro-seen") === "1";
+      sessionStorage.setItem("site-ascii-intro-seen", "1");
+    } catch {}
+    if (
+      intro &&
+      document.readyState === "loading" &&
+      !seen &&
+      !location.hash &&
+      !matchMedia("(prefers-reduced-motion: reduce)").matches
+    ) {
+      intro.dataset.startedAt = String(performance.now());
+      intro.hidden = false;
+      setTimeout(() => intro.remove(), 1750);
+    }
+  }
+</script>
+
+<script>
+  import { mountASCIIText } from "../scripts/ascii-text.js";
+  import { onPageChange } from "../scripts/page-lifecycle";
+  let played = false;
+  onPageChange((signal) => {
+    const intro = document.querySelector<HTMLElement>("[data-ascii-intro]");
+    if (!intro) return;
+    const show = !played && !intro.hidden;
+    played = true;
+    if (!show) {
+      intro.remove();
+      return;
+    }
+    const text = intro.querySelector<HTMLElement>("[data-ascii-text]");
+    const controller = new AbortController();
+    let dispose = () => {};
+    let finished = false;
+    const finish = () => {
+      if (finished) return;
+      finished = true;
+      dispose();
+      controller.abort();
+      intro.remove();
+    };
+    intro
+      .querySelector("button")
+      ?.addEventListener("click", finish, { signal: controller.signal });
+    window.addEventListener("keydown", finish, {
+      capture: true,
+      signal: controller.signal,
+    });
+    window.addEventListener("wheel", finish, {
+      passive: true,
+      signal: controller.signal,
+    });
+    window.addEventListener("touchmove", finish, {
+      passive: true,
+      signal: controller.signal,
+    });
+    signal.addEventListener("abort", finish, { once: true });
+    const startedAt = Number(intro.dataset.startedAt);
+    const deadline = window.setTimeout(
+      finish,
+      Math.max(0, 1680 - (performance.now() - startedAt)),
+    );
+    controller.signal.addEventListener("abort", () => clearTimeout(deadline), {
+      once: true,
+    });
+    if (text) dispose = mountASCIIText(text, startedAt);
+  });
+</script>
+
+<style is:global>
+  .ascii-intro {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    display: grid;
+    place-items: center;
+    color: var(--ink);
+    background: linear-gradient(
+      180deg,
+      var(--page-gradient-start) 0%,
+      var(--page-gradient-start) 75%,
+      var(--page-gradient-middle) 88%,
+      var(--page-gradient-end) 100%
+    );
+    animation: ascii-intro-out 180ms ease 1500ms forwards;
+  }
+  .ascii-intro__content {
+    width: 100%;
+    text-align: center;
+  }
+  .ascii-text {
+    position: relative;
+    width: min(1000px, 100%);
+    height: clamp(280px, 46vh, 460px);
+    margin: 0 auto;
+    touch-action: pan-y;
+  }
+  .ascii-text canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+  .ascii-text__fallback {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-content: center;
+    margin: 0;
+    font:
+      600 clamp(52px, 10vw, 96px)/1.1 ui-monospace,
+      SFMono-Regular,
+      Menlo,
+      monospace;
+    letter-spacing: -0.06em;
+    color: var(--accent-dark);
+  }
+  .ascii-text[data-ready] .ascii-text__fallback {
+    display: none;
+  }
+  .ascii-intro__caption {
+    margin: 0;
+    color: var(--muted);
+    font-size: 12px;
+    letter-spacing: 0.08em;
+  }
+  .ascii-intro__skip {
+    position: absolute;
+    bottom: calc(28px + env(safe-area-inset-bottom, 0px));
+    display: inline-flex;
+    align-items: center;
+    gap: 22px;
+    min-height: 44px;
+    padding: 8px 17px;
+    border: 1px solid var(--line);
+    border-radius: 24px;
+    color: var(--muted);
+    font: inherit;
+    font-size: 12px;
+    cursor: pointer;
+  }
+  @keyframes ascii-intro-out {
+    to {
+      opacity: 0;
+      visibility: hidden;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .ascii-intro {
+      display: none;
+    }
+  }
+</style>
