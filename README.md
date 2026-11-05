@@ -1,6 +1,8 @@
 # 一个零基础agent学生的旅程
 
-面向同路学习者的个人博客：Agent 为主线，前后端与部署作为配套实践。Astro 构建为静态网站，不需要在线后端。旧版源码保留在 `backend/`。
+面向同路学习者的个人博客：Agent 为主线，前后端与部署作为配套实践。Astro 构建为静态网站，不需要在线后端。
+
+目录职责、功能入口和内容发布流程见 [代码仓库结构](docs/repository-structure.md)。
 
 ## 开发与预览
 
@@ -95,20 +97,26 @@ order: 1
 
 `lib/content.mjs` 是统一内容适配层，页面只依赖其返回的数据。以后接入 CMS 时，替换文章读取与发布流程，继续复用文章、系列、标签页面。草稿过滤保留在内容适配层，正文生成 HTML 前进行清理。
 
-`data/site.js` 管理站名、简介、GitHub、邮箱与网站地址。站点采用统一单栏布局：顶部显示 Evan Huang 和横向导航、居中的内容主栏，手机端顶部展开菜单；下滑时收起导航，上滑时重新出现；首页只展示简介、文章与系列入口。`src/pages/` 管理 Astro 页面与 RSS、sitemap、robots 静态端点，`src/layouts/` 管理公共页面结构，`src/components/` 管理站点外壳、列表、空状态和交互组件，`src/scripts/` 管理主题、导航和页面交互。`css/blog.css` 保留全局基础样式和尚未迁移的内页样式。
+`data/site.js` 管理站名、简介、联系方式、友链、网站地址和 RSS 开关。顶部显示 Evan Huang 和横向导航，手机端可以展开菜单；下滑时收起导航，上滑时重新出现。首页展示个人序言，以及文章、项目实践和关于页入口。文章详情另有目录侧栏。
+
+`src/pages/` 管理页面、sitemap 和 robots 端点，`src/endpoints/rss.ts` 由构建配置按需注入。`src/layouts/` 管理公共页面结构，`src/components/` 管理站点外壳、列表和交互组件，`src/scripts/` 管理主题、导航和视觉效果。`lib/content.mjs` 统一处理文章与系列数据。
 
 ### 组件与交互
 
-Starwind UI 的 Astro 原生按钮由 `src/components/starwind/Button.astro` 统一封装，用于主题切换、手机导航和标签筛选。保留本网站的 Tailwind 样式，不套用组件库默认视觉主题。内容页面不加载 React 运行时。页面直接展示静态内容，不设置加载遮罩、模拟进度或最低等待时间。站内跳转使用 Astro ClientRouter，只更新页面内容；流星背景通过 `transition:persist` 保留节点和动画进度。主题、导航和标签筛选按页面切换重新绑定，旧监听通过 AbortController 释放。
+Starwind UI 的 Astro 原生按钮由 `src/components/starwind/Button.astro` 统一封装，用于主题切换、手机导航和标签筛选。按钮高光由 `css/specular-button.css` 和 `src/scripts/specular-buttons.ts` 提供。内容页面不加载 React 运行时。
+
+首次直接进入首页时，`ASCIIIntro.astro` 和 `src/scripts/ascii-text.js` 显示 `hello, people` 的 ASCII 开场，支持跳过。同一标签页不重复播放，站内导航和直接打开文章不播放。关闭 JavaScript 或启用减少动态效果时，页面直接展示内容。
+
+站内跳转使用 Astro ClientRouter；流星背景通过 `transition:persist` 保留节点和动画进度。主题、导航和标签筛选通过 `onPageChange()` 重新绑定，旧监听通过 AbortController 释放。文章阅读进度与正文交互图的增强代码目前位于 `src/pages/blog/[slug].astro`。
 
 ### 样式逐步迁移
 
 Tailwind 4 通过 `astro.config.mjs` 中的 Vite 插件接入，入口为 `css/tailwind.css`。工具类使用 `tw:` 前缀，扫描范围限定为 `src/`；暂不启用 Preflight，现有重置归入 `base` 层，使组件工具类可以覆盖基础规则。`compact`、`single`、`mobile` 自定义变体分别保持原有的 ≤1150px、≤900px、≤700px 断点。
 
-- 文章列表的标题、摘要与日期使用不同字号和文字颜色；桌面保留左侧日期栏，手机端将日期和阅读时长放在标题下方，让标题与摘要使用完整内容宽度。
-- 站点外壳、顶部导航、页脚、首页区块、文章列表和空状态已使用 Tailwind；对应的旧规则已从 `blog.css` 删除。首页的系列卡片也使用工具类，系列内页暂保留原有样式。颜色通过主题变量复用既有色值。
+- 文章列表把日期和阅读时长放在元信息行，标题与摘要各用独立字号和颜色。窄屏下标题和摘要使用完整内容宽度。
+- 站点外壳与顶部导航使用 Tailwind；首页使用组件内 CSS，文章列表、作品和关于页复用 `css/blocks.css`。文章正文和部分内页样式位于 `css/blog.css`。颜色通过主题变量复用。
 - `css/themes.css` 统一管理深浅色调色板。顶部圆形按钮点击一次直接切换深色／浅色，选择保存在 `site-theme`；未手动选择时跟随系统。初始化脚本在首屏绘制前应用偏好。
-- 后续按组件迁移：移走旧样式后再使用工具类，避免同一属性同时受全局 CSS 与 Tailwind 控制。含有特殊效果的组件继续保留 CSS Modules。
+- 后续按组件迁移：移走旧样式后再使用工具类，避免同一属性同时受全局 CSS 与 Tailwind 控制。特殊效果保留组件内 CSS 和独立绘制脚本。
 
 ## 自动构建与发布
 
@@ -138,7 +146,3 @@ Nginx 的 `root` 指向 `$DEPLOY_ROOT/current`，将 `deploy/nginx.conf` 的示�
 Cloudflare Pages 同时自动更新：[https://evan-huang-blog.pages.dev](https://evan-huang-blog.pages.dev)。现有 Direct Upload 项目通过 GitHub Actions 的 Wrangler 发布，保留原免费地址。仓库 Secrets `CLOUDFLARE_API_TOKEN` 保存仅包含当前账户 Pages 编辑权限的凭据，`CLOUDFLARE_ACCOUNT_ID` 保存账户 ID。Pages 使用独立的 `SITE_URL` 和 `RSS_ENABLED=true` 构建，网站地图、RSS 和规范链接指向 Pages 地址。推送 `main` 后，服务器和 Pages 在测试通过后分别部署；域名、DNS 与原服务器配置不变。
 
 发布记录与维护方式见 `docs/production.md`。
-
-## 旧版实验室
-
-`backend/` 保留学习用实现。新版前端不请求 `/api/`，不需要启动 FastAPI 或 SQLite 服务。旧版部署说明在 `docs/legacy-deployment.md`，不用于当前博客发布。历史数据库没有删除；要停止线上旧服务时请单独处理。

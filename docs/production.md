@@ -14,7 +14,7 @@
 
 文章放在 `content/posts/`，配图放在 `public/images/`。正文确认后设置 `draft: false`，运行 `npm test` 和 `npm run build`，提交并推送 `main`。GitHub Actions 全部成功后核对线上页面、图片和站内链接。作品目前维护在 `src/pages/works.astro`。
 
-草稿不会生成公开页面。首页文章与系列区域会在出现公开内容后自动显示。RSS 在正式发布构建中启用，本地预览默认关闭。
+草稿不会生成公开页面。公开内容进入文章列表与系列页，首页展示栏目入口。RSS 在正式发布构建中启用，本地预览默认关闭。
 
 ## Cloudflare Pages 自动发布
 
