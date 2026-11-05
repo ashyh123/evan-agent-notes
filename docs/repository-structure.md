@@ -9,7 +9,7 @@
 以下是主要目录，省略具体文章、图片、依赖和编辑器配置。
 
 ```text
-zero-to-tech/
+evan-agent-notes/
 ├── src/
 │   ├── pages/                      Astro 页面和静态端点
 │   │   ├── index.astro             首页

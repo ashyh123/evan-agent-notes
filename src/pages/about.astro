@@ -43,13 +43,15 @@ const metadata = {
   <div class="block-page">
     <header class="block-hero block-surface">
       <h1>你好，我也在学习。</h1>
-      <p>一个零基础 Agent 学生，和一段正在发生的旅程。</p>
+      <p>记录学习 Agent、动手实践和一路上的思考。</p>
     </header>
     <SectionNav items={sections} />
     <section id="toolkit" class="about-toolkit" aria-labelledby="toolkit-title">
       <h2 id="toolkit-title">技术与工具</h2>
       <ul class="tool-tags">
-        {tools.map((tool) => <li>{tool}</li>)}
+        {tools.map((tool) => (
+          <li>{tool}</li>
+        ))}
       </ul>
     </section>
     <article class="about-blocks">

@@ -1,11 +1,11 @@
 export const site = {
   author: "Evan Huang",
-  name: "一个零基础agent学生的旅程",
+  name: "Evan 的 Agent 手记",
   description:
-    "记录从零学习 Agent 的过程、踩坑与项目实践。写给正在走同一条路的你。",
+    "记录 Agent 的源码阅读、工程实践与项目构建。写给正在学习、动手做项目的你。",
   github: "https://github.com/ashyh123",
   x: "https://x.com/asomer666",
-  repository: "https://github.com/ashyh123/zero-to-tech",
+  repository: "https://github.com/ashyh123/evan-agent-notes",
   email: "ashyh666@gmail.com",
 };
 export const friendLinks = [

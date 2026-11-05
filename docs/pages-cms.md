@@ -4,7 +4,7 @@
 
 ## 首次连接
 
-使用拥有 `ashyh123/zero-to-tech` 的 GitHub 账号登录。安装 Pages CMS GitHub App 时选择 **Only select repositories**，仅选择 `zero-to-tech`。核对 GitHub 显示的权限后授权。然后打开仓库，选择 `main` 分支；后台会读取根目录的 `.pages.yml`。
+使用拥有 `ashyh123/evan-agent-notes` 的 GitHub 账号登录。安装 Pages CMS GitHub App 时选择 **Only select repositories**，仅选择 `evan-agent-notes`。核对 GitHub 显示的权限后授权。然后打开仓库，选择 `main` 分支；后台会读取根目录的 `.pages.yml`。
 
 当前仓库已经完成首次登录与 GitHub App 授权。其他账号尚未授权时，后台不能读写内容。GitHub App 具有仓库级权限；表单字段范围不是 GitHub 的访问控制边界。不要将服务器 SSH 密钥或部署 Token 填进 CMS，已有 GitHub Actions Secrets 无需提供给后台。
 

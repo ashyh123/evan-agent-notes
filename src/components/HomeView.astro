@@ -1,11 +1,11 @@
+---
+import { site } from "../../data/site.js";
+---
+
 <section class="home-overview" aria-label="博客总览">
   <header class="overview-block overview-intro">
     <p class="intro-greeting">你好，我是 Evan。</p>
-    <h1>
-      一个零基础
-      <br />
-      Agent 学生的旅程
-    </h1>
+    <h1>{site.name}</h1>
     <p class="intro-copy">
       从读懂一段源码，到把想法做成一个小项目，
       <br class="intro-break" />
@@ -253,6 +253,8 @@
     margin-bottom: 17px;
   }
   .overview-intro h1 {
+    max-width: 11ch;
+    text-wrap: balance;
     font-size: clamp(29px, 3.2vw, 39px);
     font-weight: 600;
     line-height: 1.45;

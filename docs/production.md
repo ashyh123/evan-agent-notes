@@ -2,7 +2,7 @@
 
 当前站点使用 GitHub Actions 自动发布到原服务器与 Cloudflare Pages，两处分别提供静态文件。
 
-- 仓库：`ashyh123/zero-to-tech`，发布分支：`main`。
+- 仓库：`ashyh123/evan-agent-notes`，发布分支：`main`。
 - 原域名地址：`http://ashyh666.me`（备案拦截尚未解除）。
 - Pages 免费地址：[https://evan-huang-blog.pages.dev](https://evan-huang-blog.pages.dev)，项目 `evan-huang-blog`。
 - 服务器：`101.200.231.184`，发布用户：`blogdeploy`。
