@@ -71,13 +71,19 @@ const url = new URL(canonical, siteUrl).href;
     </script>
   </head>
   <body>
-    <div
-      id="site-meteors"
-      transition:persist="site-meteors"
-      transition:animate="none"
-    >
-      <MeteorBackground />
-    </div>
+    {
+      Astro.slots.has("background") ? (
+        <slot name="background" />
+      ) : (
+        <div
+          id="site-meteors"
+          transition:persist="site-meteors"
+          transition:animate="none"
+        >
+          <MeteorBackground />
+        </div>
+      )
+    }
     <noscript>
       <style is:inline>
         .theme-switcher {
