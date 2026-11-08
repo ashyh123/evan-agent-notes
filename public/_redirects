@@ -1,0 +1,2 @@
+# Stop serving the old feed at its cached Cloudflare Pages URL.
+/rss.xml /rss-retired 302
