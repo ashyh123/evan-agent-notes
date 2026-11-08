@@ -1,5 +1,6 @@
 ---
 import { friendLinks, site, siteUrl } from "../../data/site.js";
+import { originalHost, pagesOrigin } from "../../data/friend-links.js";
 import FriendGalaxy from "../components/friends/FriendGalaxy.jsx";
 import Layout from "../layouts/Layout.astro";
 
@@ -14,11 +15,10 @@ const exchangeFields = [
 const exchangeCard = exchangeFields
   .map(([label, value]) => `${label}：${value}`)
   .join("\n");
-const applicationFields = [
-  ...exchangeFields.map(([label]) => label),
-  "已添加本站的页面地址",
-].map((label) => `${label}：`);
-const applicationUrl = `mailto:${site.email}?subject=${encodeURIComponent("交换友链")}&body=${encodeURIComponent(applicationFields.join("\r\n"))}`;
+const applicationApi =
+  new URL(siteUrl).hostname === originalHost
+    ? `${pagesOrigin}/api/friends`
+    : "/api/friends";
 ---
 
 <Layout
@@ -33,6 +33,7 @@ const applicationUrl = `mailto:${site.email}?subject=${encodeURIComponent("交�
   <friend-constellation
     class="friend-sky"
     data-friend-sky
+    data-friends-api={applicationApi}
     aria-labelledby="friends-title"
   >
     <header class="friend-heading">
@@ -96,11 +97,29 @@ const applicationUrl = `mailto:${site.email}?subject=${encodeURIComponent("交�
         </button>
       </li>
     </ul>
+    <template data-approved-friend>
+      <li class="friend-star-position">
+        <a class="friend-star" target="_blank" rel="noopener noreferrer">
+          <img
+            alt=""
+            width="43"
+            height="43"
+            draggable="false"
+            referrerpolicy="no-referrer"
+          />
+          <span>
+            <span data-friend-name></span>
+            <span aria-hidden="true"> ↗</span>
+            <small></small>
+          </span>
+        </a>
+      </li>
+    </template>
   </friend-constellation>
 
   <details class="friend-exchange" id="friend-exchange">
     <summary>给你的博客留个位置</summary>
-    <p>写封邮件介绍你的小站。互链确认后，你的头像也会出现在这片星空里。</p>
+    <p>提交后会先检查互链，审核通过后，你的头像就会出现在这片星空里。</p>
     <ol class="friend-exchange-steps">
       <li>
         <h2>1. 先把本站加到你的友链页</h2>
@@ -117,22 +136,55 @@ const applicationUrl = `mailto:${site.email}?subject=${encodeURIComponent("交�
         </div>
       </li>
       <li>
-        <h2>2. 把你的站点资料发给我</h2>
-        <pre id="friend-application-template">{applicationFields.join("\n")}</pre>
-        <div class="friend-exchange-actions">
-          <a href={applicationUrl}>
-            打开邮件草稿 <span aria-hidden="true">↗</span>
-          </a>
-          <button
-            type="button"
-            data-copy-friend-exchange="friend-application-template"
-            hidden
-          >
-            复制申请模板
+        <h2>2. 介绍你的小站</h2>
+        <form class="friend-application" method="post">
+          <label>
+            站点名称 <input name="name" maxlength="60" required />
+          </label>
+          <label>
+            站点简介{" "}
+            <textarea
+              name="description"
+              rows="2"
+              maxlength="180"
+              required
+            ></textarea>
+          </label>
+          <label>
+            站点网址{" "}
+            <input
+              name="url"
+              type="url"
+              maxlength="500"
+              placeholder="https://"
+              required
+            />
+          </label>
+          <label>
+            头像网址{" "}
+            <input
+              name="avatar"
+              type="url"
+              maxlength="500"
+              placeholder="https://"
+              required
+            />
+          </label>
+          <label>
+            已添加本站的页面地址{" "}
+            <input
+              name="backlink"
+              type="url"
+              maxlength="500"
+              placeholder="https://"
+              required
+            />
+          </label>
+          <button type="submit" disabled>
+            检查互链并提交
           </button>
           <span role="status"></span>
-        </div>
-        <p class="friend-exchange-recipient">收件邮箱 {site.email}</p>
+        </form>
       </li>
     </ol>
   </details>
@@ -145,33 +197,63 @@ const applicationUrl = `mailto:${site.email}?subject=${encodeURIComponent("交�
     #resize;
 
     connectedCallback() {
+      this.#resize = new ResizeObserver(() => this.drawConnections());
+      this.#resize.observe(this);
+      this.drawConnections();
+    }
+
+    drawConnections() {
       const portraits = [...this.querySelectorAll(".friend-star img")];
       const [owner, ...friends] = portraits;
-      const paths = this.querySelectorAll(".friend-connections path");
-      if (!owner || friends.length === 0) return;
-
-      const drawConnections = () => {
-        const scene = this.getBoundingClientRect();
-        const center = (portrait: Element) => {
-          const bounds = portrait.getBoundingClientRect();
-          return {
-            x: bounds.left - scene.left + bounds.width / 2,
-            y: bounds.top - scene.top + bounds.height / 2,
-          };
+      const lines = this.querySelector(".friend-connections");
+      if (!owner || !lines) return;
+      const paths = lines.querySelectorAll("path");
+      const scene = this.getBoundingClientRect();
+      const center = (portrait: Element) => {
+        const bounds = portrait.getBoundingClientRect();
+        return {
+          x: bounds.left - scene.left + bounds.width / 2,
+          y: bounds.top - scene.top + bounds.height / 2,
         };
-        const start = center(owner);
-        friends.forEach((portrait, index) => {
-          const end = center(portrait);
-          const middle = (start.x + end.x) / 2;
-          paths[index]?.setAttribute(
-            "d",
-            `M ${start.x} ${start.y} Q ${middle} ${start.y} ${end.x} ${end.y}`,
-          );
-        });
       };
-      this.#resize = new ResizeObserver(drawConnections);
-      this.#resize.observe(this);
-      drawConnections();
+      const start = center(owner);
+      friends.forEach((portrait, index) => {
+        const end = center(portrait);
+        const middle = (start.x + end.x) / 2;
+        const path =
+          paths[index] ??
+          lines.appendChild(
+            document.createElementNS("http://www.w3.org/2000/svg", "path"),
+          );
+        path.setAttribute(
+          "d",
+          `M ${start.x} ${start.y} Q ${middle} ${start.y} ${end.x} ${end.y}`,
+        );
+      });
+    }
+
+    appendFriends(
+      friends: {
+        name: string;
+        description: string;
+        url: string;
+        avatar: string;
+      }[],
+    ) {
+      const template = this.querySelector<HTMLTemplateElement>(
+        "[data-approved-friend]",
+      );
+      const invite = this.querySelector(".friend-invite-position");
+      if (!template || !invite) return;
+      for (const friend of friends) {
+        const row = template.content.cloneNode(true) as DocumentFragment;
+        row.querySelector("a")!.href = friend.url;
+        row.querySelector("img")!.src = friend.avatar;
+        row.querySelector("[data-friend-name]")!.textContent = friend.name;
+        row.querySelector("small")!.textContent = friend.description;
+        invite.before(row);
+      }
+      this.drawConnections();
     }
 
     disconnectedCallback() {
@@ -182,8 +264,55 @@ const applicationUrl = `mailto:${site.email}?subject=${encodeURIComponent("交�
   customElements.define("friend-constellation", FriendConstellation);
 
   onPageChange((signal) => {
+    const constellation = document.querySelector<FriendConstellation>(
+      "friend-constellation",
+    );
+    const form = document.querySelector<HTMLFormElement>(".friend-application");
+    const endpoint = constellation?.dataset.friendsApi;
+    const submit = form?.querySelector<HTMLButtonElement>(
+      'button[type="submit"]',
+    );
+    const applicationStatus = form?.querySelector('[role="status"]');
+    if (constellation && form && endpoint && submit && applicationStatus) {
+      fetch(endpoint, { signal })
+        .then((response) => (response.ok ? response.json() : null))
+        .then((result) => {
+          if (result && !signal.aborted)
+            constellation.appendFriends(result.friends);
+        })
+        .catch(() => {});
+      submit.disabled = false;
+      form.addEventListener(
+        "submit",
+        async (event) => {
+          event.preventDefault();
+          if (submit.disabled) return;
+          submit.disabled = true;
+          applicationStatus.textContent = "正在检查互链页面…";
+          try {
+            const response = await fetch(endpoint, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(Object.fromEntries(new FormData(form))),
+              signal,
+            });
+            const result = await response.json();
+            if (response.ok) form.reset();
+            applicationStatus.textContent = result.message ?? result.error;
+          } catch {
+            if (!signal.aborted)
+              applicationStatus.textContent = "暂时提交不了，请稍后再试。";
+          } finally {
+            submit.disabled = false;
+          }
+        },
+        { signal },
+      );
+    }
+
     const invite = document.querySelector<HTMLButtonElement>(".friend-invite");
-    const exchange = document.querySelector<HTMLDetailsElement>("#friend-exchange");
+    const exchange =
+      document.querySelector<HTMLDetailsElement>("#friend-exchange");
     const summary = exchange?.querySelector("summary");
     if (invite && exchange && summary) {
       invite.hidden = false;
@@ -253,7 +382,11 @@ const applicationUrl = `mailto:${site.email}?subject=${encodeURIComponent("交�
     inset: 0;
     pointer-events: none;
     background:
-      radial-gradient(ellipse 74% 84% at 49% 45%, var(--sky-haze), transparent 88%),
+      radial-gradient(
+        ellipse 74% 84% at 49% 45%,
+        var(--sky-haze),
+        transparent 88%
+      ),
       var(--paper);
   }
 
@@ -319,7 +452,7 @@ const applicationUrl = `mailto:${site.email}?subject=${encodeURIComponent("交�
     font-size: 13px;
   }
 
-  .friend-connections path {
+  .friend-connections :global(path) {
     fill: none;
     stroke: var(--sky-thread);
     stroke-opacity: 0.2;
@@ -328,7 +461,7 @@ const applicationUrl = `mailto:${site.email}?subject=${encodeURIComponent("交�
 
   .friend-sky:has(.friend-star:is(:hover, :focus-visible))
     .friend-connections
-    path {
+    :global(path) {
     stroke-opacity: 0.45;
   }
 
@@ -405,7 +538,9 @@ const applicationUrl = `mailto:${site.email}?subject=${encodeURIComponent("交�
     border-radius: 50%;
     background: color-mix(in srgb, var(--paper) 80%, transparent);
     box-shadow: 0 0 16px color-mix(in srgb, var(--accent) 15%, transparent);
-    transition: box-shadow 220ms ease, background-color 220ms ease;
+    transition:
+      box-shadow 220ms ease,
+      background-color 220ms ease;
   }
 
   .friend-invite:is(:hover, :focus-visible, [aria-expanded="true"])
@@ -529,7 +664,6 @@ const applicationUrl = `mailto:${site.email}?subject=${encodeURIComponent("交�
     margin-top: 8px;
   }
 
-  .friend-exchange-actions a,
   .friend-exchange-actions button {
     line-height: 44px;
     color: var(--accent-dark);
@@ -544,20 +678,42 @@ const applicationUrl = `mailto:${site.email}?subject=${encodeURIComponent("交�
     cursor: pointer;
   }
 
-  .friend-exchange-actions a {
+  .friend-application {
+    display: grid;
+    gap: 10px;
+  }
+
+  .friend-application label {
+    display: grid;
+    gap: 3px;
+  }
+
+  .friend-application input,
+  .friend-application textarea {
+    width: 100%;
+    min-width: 0;
+    padding: 8px 10px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--paper) 72%, transparent);
+    color: var(--ink);
+    font: inherit;
+  }
+
+  .friend-application button {
+    justify-self: start;
+    min-height: 44px;
     padding-inline: 14px;
     border: 1px solid color-mix(in srgb, var(--accent) 34%, transparent);
     border-radius: 999px;
     background: color-mix(in srgb, var(--paper) 86%, var(--accent));
-    text-decoration: none;
+    color: var(--accent-dark);
+    cursor: pointer;
   }
 
-  .friend-exchange-actions a:hover {
-    background: color-mix(in srgb, var(--paper) 76%, var(--accent));
-  }
-
-  .friend-exchange-recipient {
-    overflow-wrap: anywhere;
+  .friend-application button:disabled {
+    opacity: 0.6;
+    cursor: default;
   }
 
   @media (max-width: 650px) {
@@ -572,7 +728,7 @@ const applicationUrl = `mailto:${site.email}?subject=${encodeURIComponent("交�
 
   @media (prefers-reduced-motion: reduce) {
     .friend-invite-mark,
-    .friend-connections path,
+    .friend-connections :global(path),
     .friend-star img {
       transition: none;
     }

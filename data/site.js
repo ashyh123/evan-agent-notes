@@ -1,3 +1,5 @@
+export { friendLinks } from "./friend-links.js";
+
 export const site = {
   author: "Evan Huang",
   name: "Evan 的 Agent 手记",
@@ -8,19 +10,6 @@ export const site = {
   repository: "https://github.com/ashyh123/evan-agent-notes",
   email: "ashyh666@gmail.com",
 };
-export const friendLinks = [
-  {
-    name: "Joye Blog",
-    url: "https://www.joyehuang.me/",
-    avatar: "/images/friends/joye.webp",
-  },
-  {
-    name: "clerimia",
-    description: "一边创作，一边成为自己",
-    url: "https://clerimia.github.io/",
-    avatar: "/images/friends/clerimia.jpg",
-  },
-];
 export const siteUrl = (
   process.env.SITE_URL || "http://localhost:3000"
 ).replace(/\/$/, "");
