@@ -1,12 +1,18 @@
 ---
-import { friendLinks, site } from "../../data/site.js";
+import { friendLinks, site, siteUrl } from "../../data/site.js";
 import FriendGalaxy from "../components/friends/FriendGalaxy.jsx";
 import Layout from "../layouts/Layout.astro";
 
-const stars = [
-  { name: site.author, url: "/", avatar: "/images/avatar.png" },
-  ...friendLinks,
-];
+const owner = { name: site.author, url: "/", avatar: "/images/avatar.png" };
+const stars = [owner, ...friendLinks];
+const exchangeCard = [
+  `Name: ${site.name}`,
+  `Desc: ${site.description}`,
+  `Link: ${new URL(owner.url, siteUrl).href}`,
+  `Avatar: ${new URL(owner.avatar, siteUrl).href}`,
+].join("\n");
+const applicationBody = ["Name: ", "Desc: ", "Link: ", "Avatar: "].join("\r\n");
+const applicationUrl = `mailto:${site.email}?subject=${encodeURIComponent("交换友链")}&body=${encodeURIComponent(applicationBody)}`;
 ---
 
 <Layout
@@ -51,6 +57,7 @@ const stars = [
             <span>
               {star.name}
               {index > 0 && <span aria-hidden="true"> ↗</span>}
+              {star.description && <small>{star.description}</small>}
             </span>
           </a>
         </li>
@@ -60,10 +67,15 @@ const stars = [
 
   <details class="friend-exchange">
     <summary>交换友链</summary>
-    <p>发来你的博客名、网址、头像和一句简介。</p>
-    <a href={`mailto:${site.email}?subject=${encodeURIComponent("交换友链")}`}>
-      邮件联系 Evan <span aria-hidden="true">↗</span>
-    </a>
+    <p>下面是本站资料。申请时，请按同样的四行格式填写你的博客信息。</p>
+    <pre id="friend-exchange-card">{exchangeCard}</pre>
+    <div class="friend-exchange-actions">
+      <button type="button" id="copy-friend-exchange-card" hidden>
+        复制本站资料
+      </button>
+      <a href={applicationUrl}>邮件申请友链 <span aria-hidden="true">↗</span></a>
+    </div>
+    <div id="friend-copy-status" role="status"></div>
   </details>
 </Layout>
 
@@ -107,6 +119,25 @@ const stars = [
   }
 
   customElements.define("friend-constellation", FriendConstellation);
+
+  const copyButton = document.querySelector<HTMLButtonElement>(
+    "#copy-friend-exchange-card",
+  );
+  const cardText = document
+    .querySelector("#friend-exchange-card")
+    ?.textContent?.trim();
+  const copyStatus = document.querySelector("#friend-copy-status");
+  if (copyButton && cardText && copyStatus && navigator.clipboard) {
+    copyButton.hidden = false;
+    copyButton.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(cardText);
+        copyStatus.textContent = "已复制本站资料。";
+      } catch {
+        copyStatus.textContent = "请选中上方资料手动复制。";
+      }
+    });
+  }
 </script>
 
 <style>
@@ -231,6 +262,12 @@ const stars = [
     --portrait: clamp(30px, 4.85vw, 43px);
   }
 
+  .friend-star small {
+    display: block;
+    margin-top: 4px;
+    font-size: 11px;
+  }
+
   .friend-star img {
     display: block;
     width: var(--portrait);
@@ -276,10 +313,32 @@ const stars = [
     margin-block: 3px 7px;
   }
 
-  .friend-exchange a {
+  .friend-exchange pre {
+    padding: 12px 14px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    color: var(--ink);
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+
+  .friend-exchange-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0 16px;
+  }
+
+  .friend-exchange-actions a,
+  .friend-exchange-actions button {
+    line-height: 44px;
     color: var(--accent-dark);
     text-decoration: underline;
     text-underline-offset: 4px;
+  }
+
+  .friend-exchange-actions button {
+    cursor: pointer;
   }
 
   @media (prefers-reduced-motion: reduce) {

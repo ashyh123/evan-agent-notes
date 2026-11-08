@@ -14,6 +14,12 @@ export const friendLinks = [
     url: "https://www.joyehuang.me/",
     avatar: "/images/friends/joye.webp",
   },
+  {
+    name: "clerimia",
+    description: "一边创作，一边成为自己",
+    url: "https://clerimia.github.io/",
+    avatar: "/images/friends/clerimia.jpg",
+  },
 ];
 export const siteUrl = (
   process.env.SITE_URL || "http://localhost:3000"
