@@ -1,0 +1,13 @@
+.shuffle-parent {
+  display: inline-block;
+  max-inline-size: 100%;
+  white-space: normal;
+  overflow-wrap: break-word;
+  font: inherit;
+}
+
+.shuffle-char {
+  line-height: inherit;
+  display: inline-block;
+  text-align: center;
+}

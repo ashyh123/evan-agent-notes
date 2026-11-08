@@ -2,8 +2,10 @@
 import { friendLinks, site, siteUrl } from "../../data/site.js";
 import { originalHost, pagesOrigin } from "../../data/friend-links.js";
 import FriendGalaxy from "../components/friends/FriendGalaxy.jsx";
+import Shuffle from "../components/friends/Shuffle.jsx";
 import Layout from "../layouts/Layout.astro";
 
+const friendHeading = "Visit My Friends Among the Stars";
 const owner = { name: site.author, url: "/", avatar: "/images/avatar.png" };
 const stars = [owner, ...friendLinks];
 const exchangeFields = [
@@ -37,7 +39,9 @@ const applicationApi =
     aria-labelledby="friends-title"
   >
     <header class="friend-heading">
-      <h1 id="friends-title">沿着星光去串门</h1>
+      <h1 id="friends-title" lang="en" aria-label={friendHeading}>
+        <Shuffle client:load tag="span" text={friendHeading} />
+      </h1>
       <p>点一颗头像星，去朋友的博客坐坐。</p>
     </header>
 
@@ -444,6 +448,7 @@ const applicationApi =
     font-weight: 500;
     letter-spacing: 0.045em;
     line-height: 1.35;
+    text-wrap: balance;
   }
 
   .friend-heading p {
