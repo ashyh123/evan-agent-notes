@@ -507,10 +507,10 @@ const Galaxy = ({
       wake();
     };
 
-    const scene = container.closest('[data-friend-sky]') ?? container;
+    const scene = document.querySelector('[data-friend-sky]') ?? container;
     const onDoubleClick = event => {
-      const onLink = event.target instanceof Element && event.target.closest('a');
-      if (!settingsRef.current.clickWarp || reduce || onLink) return;
+      const onControl = event.target instanceof Element && event.target.closest('a, button');
+      if (!settingsRef.current.clickWarp || reduce || onControl) return;
       state.boost = Math.min(1.6, state.boost + 1);
       wake();
     };
