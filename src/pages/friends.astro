@@ -1,0 +1,291 @@
+---
+import { friendLinks, site } from "../../data/site.js";
+import Galaxy from "../components/friends/Galaxy.jsx";
+import Layout from "../layouts/Layout.astro";
+
+const stars = [
+  { name: site.author, url: "/", avatar: "/images/avatar.png" },
+  ...friendLinks,
+];
+---
+
+<Layout
+  title="友链"
+  description="在星空里遇见 Evan 的博客朋友。"
+  canonical="/friends"
+>
+  <friend-constellation
+    class="friend-sky"
+    data-friend-sky
+    aria-labelledby="friends-title"
+  >
+    <Galaxy
+      client:load
+      className="friend-galaxy"
+      aria-hidden="true"
+      density={1.02}
+      glowIntensity={0.31}
+      flareIntensity={0.62}
+      starSize={1.02}
+      starSpeed={0.35}
+      speed={0.6}
+      rotationSpeed={0.035}
+      repulsionStrength={1.2}
+      starColors={["#edf3ff", "#aec7ff", "#d4e4ff", "#ffecd8"]}
+      intro={false}
+    />
+
+    <header class="friend-heading">
+      <h1 id="friends-title">友链</h1>
+      <p>{site.name}</p>
+    </header>
+
+    <svg class="friend-connections" aria-hidden="true">
+      {friendLinks.map(() => (
+        <path />
+      ))}
+    </svg>
+
+    <ul class="friend-stars">
+      {stars.map((star, index) => (
+        <li>
+          <a
+            class="friend-star"
+            href={star.url}
+            target={index === 0 ? undefined : "_blank"}
+            rel={index === 0 ? undefined : "noopener noreferrer"}
+          >
+            <img
+              src={star.avatar}
+              alt=""
+              width="43"
+              height="43"
+              draggable="false"
+            />
+            <span>
+              {star.name}
+              {index > 0 && <span aria-hidden="true"> ↗</span>}
+            </span>
+          </a>
+        </li>
+      ))}
+    </ul>
+  </friend-constellation>
+
+  <details class="friend-exchange">
+    <summary>交换友链</summary>
+    <p>发来你的博客名、网址、头像和一句简介。</p>
+    <a href={`mailto:${site.email}?subject=${encodeURIComponent("交换友链")}`}>
+      邮件联系 Evan <span aria-hidden="true">↗</span>
+    </a>
+  </details>
+</Layout>
+
+<script>
+  class FriendConstellation extends HTMLElement {
+    #resize;
+
+    connectedCallback() {
+      const portraits = [...this.querySelectorAll(".friend-star img")];
+      const [owner, ...friends] = portraits;
+      const paths = this.querySelectorAll(".friend-connections path");
+      if (!owner || friends.length === 0) return;
+
+      const drawConnections = () => {
+        const scene = this.getBoundingClientRect();
+        const center = (portrait: Element) => {
+          const bounds = portrait.getBoundingClientRect();
+          return {
+            x: bounds.left - scene.left + bounds.width / 2,
+            y: bounds.top - scene.top + bounds.height / 2,
+          };
+        };
+        const start = center(owner);
+        friends.forEach((portrait, index) => {
+          const end = center(portrait);
+          const middle = (start.x + end.x) / 2;
+          paths[index]?.setAttribute(
+            "d",
+            `M ${start.x} ${start.y} Q ${middle} ${start.y} ${end.x} ${end.y}`,
+          );
+        });
+      };
+      this.#resize = new ResizeObserver(drawConnections);
+      this.#resize.observe(this);
+      drawConnections();
+    }
+
+    disconnectedCallback() {
+      this.#resize?.disconnect();
+    }
+  }
+
+  customElements.define("friend-constellation", FriendConstellation);
+</script>
+
+<style>
+  .friend-sky {
+    --sky-ink: #edf2fb;
+    --sky-muted: #abbcd2;
+    display: grid;
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    min-height: clamp(350px, 52vw, 485px);
+    border-radius: 24px;
+    background:
+      radial-gradient(ellipse at 36% 96%, #162743 0%, transparent 64%), #080d17;
+    color: var(--sky-ink);
+    touch-action: manipulation;
+  }
+
+  .friend-sky :global(.friend-galaxy),
+  .friend-connections {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+
+  .friend-heading {
+    position: absolute;
+    top: clamp(24px, 4.3vw, 41px);
+    left: clamp(23px, 5.1vw, 48px);
+    pointer-events: none;
+  }
+
+  .friend-heading h1 {
+    font-size: clamp(25px, 3.4vw, 34px);
+    font-weight: 500;
+    letter-spacing: 0.055em;
+    line-height: 1.35;
+  }
+
+  .friend-heading p {
+    margin-top: 7px;
+    color: var(--sky-muted);
+    font-size: 13px;
+  }
+
+  .friend-connections path {
+    fill: none;
+    stroke: #90aacc;
+    stroke-opacity: 0.2;
+    transition: stroke-opacity 250ms ease;
+  }
+
+  .friend-sky:has(.friend-star:is(:hover, :focus-visible))
+    .friend-connections
+    path {
+    stroke-opacity: 0.45;
+  }
+
+  .friend-stars {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(112px, 50%), 1fr));
+    align-content: center;
+    justify-items: center;
+    gap: 48px 0;
+    margin: 0;
+    padding: 104px 10% 56px;
+    list-style: none;
+    pointer-events: none;
+  }
+
+  .friend-stars li {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .friend-stars li:nth-child(odd) {
+    transform: translateY(24px);
+  }
+
+  .friend-stars li:nth-child(even) {
+    transform: translateY(-24px);
+  }
+
+  .friend-star {
+    --portrait: clamp(28px, 4.5vw, 40px);
+    display: flex;
+    min-width: 48px;
+    min-height: 44px;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding-inline: 4px;
+    color: var(--sky-muted);
+    font-size: 12px;
+    text-align: center;
+    overflow-wrap: anywhere;
+    pointer-events: auto;
+  }
+
+  .friend-stars li:first-child .friend-star {
+    --portrait: clamp(30px, 4.85vw, 43px);
+  }
+
+  .friend-star img {
+    display: block;
+    width: var(--portrait);
+    height: var(--portrait);
+    border-radius: 50%;
+    object-fit: cover;
+    box-shadow:
+      0 0 8px #9bb7e985,
+      0 0 24px #9bb7e962;
+    transition:
+      transform 250ms ease,
+      box-shadow 250ms ease;
+  }
+
+  .friend-star:is(:hover, :focus-visible) {
+    color: var(--sky-ink);
+  }
+
+  .friend-star:is(:hover, :focus-visible) img {
+    transform: scale(1.1);
+    box-shadow: 0 0 30px #a9c3e5a0;
+  }
+
+  .friend-star:focus-visible {
+    outline-color: #c6defe;
+  }
+
+  .friend-exchange {
+    margin-top: 13px;
+    padding-inline: 3px;
+    color: var(--muted);
+    font-size: 13px;
+  }
+
+  .friend-exchange summary {
+    width: fit-content;
+    min-height: 44px;
+    line-height: 44px;
+    cursor: pointer;
+  }
+
+  .friend-exchange p {
+    margin-block: 3px 7px;
+  }
+
+  .friend-exchange a {
+    color: var(--accent-dark);
+    text-decoration: underline;
+    text-underline-offset: 4px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .friend-connections path,
+    .friend-star img {
+      transition: none;
+    }
+
+    .friend-star:is(:hover, :focus-visible) img {
+      transform: none;
+    }
+  }
+</style>

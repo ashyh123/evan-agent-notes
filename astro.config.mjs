@@ -1,3 +1,4 @@
+import react from "@astrojs/react";
 import { defineConfig } from "astro/config";
 import { loadEnv } from "vite";
 const env = loadEnv(process.env.NODE_ENV || "production", process.cwd(), [
@@ -11,6 +12,7 @@ if (process.env.RSS_ENABLED === undefined && env.RSS_ENABLED !== undefined) {
 }
 export default defineConfig({
   integrations: [
+    react(),
     {
       name: "optional-rss",
       hooks: {

@@ -9,7 +9,7 @@ export function GET() {
       .replace(/"/g, "&quot;")
       .replace(/'/g, "&apos;");
   const entries = [
-    ...["", "/blog", "/series", "/works", "/about"].map(
+    ...["", "/blog", "/series", "/works", "/about", "/friends"].map(
       (route) => ({ url: `${siteUrl}${route}`, date: null }),
     ),
     ...getPosts().map((post) => ({
