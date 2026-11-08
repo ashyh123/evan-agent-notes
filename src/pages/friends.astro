@@ -1,6 +1,6 @@
 ---
 import { friendLinks, site } from "../../data/site.js";
-import Galaxy from "../components/friends/Galaxy.jsx";
+import FriendGalaxy from "../components/friends/FriendGalaxy.jsx";
 import Layout from "../layouts/Layout.astro";
 
 const stars = [
@@ -19,21 +19,7 @@ const stars = [
     data-friend-sky
     aria-labelledby="friends-title"
   >
-    <Galaxy
-      client:load
-      className="friend-galaxy"
-      aria-hidden="true"
-      density={1.02}
-      glowIntensity={0.31}
-      flareIntensity={0.62}
-      starSize={1.02}
-      starSpeed={0.35}
-      speed={0.6}
-      rotationSpeed={0.035}
-      repulsionStrength={1.2}
-      starColors={["#edf3ff", "#aec7ff", "#d4e4ff", "#ffecd8"]}
-      intro={false}
-    />
+    <FriendGalaxy client:load />
 
     <header class="friend-heading">
       <h1 id="friends-title">友链</h1>
@@ -127,6 +113,11 @@ const stars = [
   .friend-sky {
     --sky-ink: #edf2fb;
     --sky-muted: #abbcd2;
+    --sky-thread: #90aacc;
+    --sky-focus: #c6defe;
+    --sky-avatar-core: #9bb7e985;
+    --sky-avatar-halo: #9bb7e962;
+    --sky-avatar-hover: #a9c3e5a0;
     display: grid;
     position: relative;
     isolation: isolate;
@@ -137,6 +128,19 @@ const stars = [
       radial-gradient(ellipse at 36% 96%, #162743 0%, transparent 64%), #080d17;
     color: var(--sky-ink);
     touch-action: manipulation;
+  }
+
+  :global(:root[data-theme="light"]) .friend-sky {
+    --sky-ink: #233a57;
+    --sky-muted: #435c7c;
+    --sky-thread: #456b98;
+    --sky-focus: #355f96;
+    --sky-avatar-core: #7295bd66;
+    --sky-avatar-halo: #8faedb82;
+    --sky-avatar-hover: #7e9fcaa3;
+    background:
+      radial-gradient(ellipse at 80% 5%, #f9fcff 0%, transparent 62%),
+      radial-gradient(ellipse at 24% 105%, #c5d9f2 0%, transparent 65%), #eaf1fb;
   }
 
   .friend-sky :global(.friend-galaxy),
@@ -170,7 +174,7 @@ const stars = [
 
   .friend-connections path {
     fill: none;
-    stroke: #90aacc;
+    stroke: var(--sky-thread);
     stroke-opacity: 0.2;
     transition: stroke-opacity 250ms ease;
   }
@@ -234,8 +238,8 @@ const stars = [
     border-radius: 50%;
     object-fit: cover;
     box-shadow:
-      0 0 8px #9bb7e985,
-      0 0 24px #9bb7e962;
+      0 0 8px var(--sky-avatar-core),
+      0 0 24px var(--sky-avatar-halo);
     transition:
       transform 250ms ease,
       box-shadow 250ms ease;
@@ -247,11 +251,11 @@ const stars = [
 
   .friend-star:is(:hover, :focus-visible) img {
     transform: scale(1.1);
-    box-shadow: 0 0 30px #a9c3e5a0;
+    box-shadow: 0 0 30px var(--sky-avatar-hover);
   }
 
   .friend-star:focus-visible {
-    outline-color: #c6defe;
+    outline-color: var(--sky-focus);
   }
 
   .friend-exchange {

@@ -5,6 +5,8 @@ on:
   workflow_dispatch:
 permissions:
   contents: read
+env:
+  RSS_ENABLED: "false"
 concurrency:
   group: blog-production
   cancel-in-progress: false
@@ -13,7 +15,6 @@ jobs:
     runs-on: ubuntu-latest
     env:
       SITE_URL: ${{ vars.SITE_URL }}
-      RSS_ENABLED: ${{ vars.DEPLOY_ENABLED == 'true' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -56,7 +57,6 @@ jobs:
     runs-on: ubuntu-latest
     env:
       SITE_URL: https://evan-huang-blog.pages.dev
-      RSS_ENABLED: "true"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -64,7 +64,7 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      # Build separately so Pages canonical URLs, RSS and sitemap use its own address.
+      # Build separately so Pages canonical URLs and sitemap use its own address.
       - run: npm run build
       - name: Publish the existing Pages project
         uses: cloudflare/wrangler-action@v4
