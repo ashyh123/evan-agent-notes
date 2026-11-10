@@ -1,2 +1,5 @@
 # Stop serving the old feed at its cached Cloudflare Pages URL.
 /rss.xml /rss-retired 302
+
+# Keep the old MCP article URL off the public site while the post is a draft.
+/blog/jiajia-mcp-server /blog 302
