@@ -4,7 +4,7 @@ title: "把群聊知识库开放给 AI Agent：夹夹 MCP 服务端实现笔记"
 summary: "从第一个 PR 被关闭讲起，记录夹夹 MCP 服务端如何定契约、复用网站读取、处理群聊内容，以及用实测控制搜索成本。"
 date: "2026-11-08"
 tags: [Agent, MCP, 工程实践]
-draft: false
+draft: true
 ---
 
 夹夹是一个 QQ 群机器人。它在群里回答问题，回答和讨论经过审核、脱敏后公开到群知识库网站。接入 MCP 后，你的 Agent 就能直接检索群里沉淀下来的问答、条目、面经和日报。欢迎看看 [夹夹知识库](https://jiajia.fun/) 和 [MCP 接入指南](https://jiajia.fun/mcp)。
