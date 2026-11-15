@@ -12,7 +12,11 @@ import {
   siteKey,
 } from "../../server/friend-backlink.js";
 
-const ownHosts = new Set([originalHost, new URL(pagesOrigin).hostname]);
+const ownHosts = new Set([
+  originalHost,
+  new URL(pagesOrigin).hostname,
+  "evanhuang-ovo.dev",
+]);
 const existingKeys = new Set(
   friendLinks.map(({ url }) => siteKey(new URL(url))),
 );

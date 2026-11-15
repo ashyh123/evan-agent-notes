@@ -56,7 +56,7 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     env:
-      SITE_URL: https://evan-huang-blog.pages.dev
+      SITE_URL: https://evanhuang-ovo.dev
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
