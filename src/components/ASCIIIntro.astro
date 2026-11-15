@@ -1,8 +1,17 @@
 ---
 import { site } from "../../data/site.js";
+
+const holdMs = 3000;
+const fadeMs = 180;
 ---
 
-<div class="ascii-intro" data-ascii-intro hidden>
+<div
+  class="ascii-intro"
+  data-ascii-intro
+  data-duration={holdMs + fadeMs}
+  style={`--ascii-intro-hold: ${holdMs}ms; --ascii-intro-fade: ${fadeMs}ms;`}
+  hidden
+>
   <div class="ascii-intro__content">
     <div
       class="ascii-text"
@@ -45,7 +54,7 @@ import { site } from "../../data/site.js";
     ) {
       intro.dataset.startedAt = String(performance.now());
       intro.hidden = false;
-      setTimeout(() => intro.remove(), 1750);
+      setTimeout(() => intro.remove(), Number(intro.dataset.duration) + 70);
     }
   }
 </script>
@@ -91,9 +100,10 @@ import { site } from "../../data/site.js";
     });
     signal.addEventListener("abort", finish, { once: true });
     const startedAt = Number(intro.dataset.startedAt);
+    const duration = Number(intro.dataset.duration);
     const deadline = window.setTimeout(
       finish,
-      Math.max(0, 1680 - (performance.now() - startedAt)),
+      Math.max(0, duration - (performance.now() - startedAt)),
     );
     controller.signal.addEventListener("abort", () => clearTimeout(deadline), {
       once: true,
@@ -117,7 +127,8 @@ import { site } from "../../data/site.js";
       var(--page-gradient-middle) 88%,
       var(--page-gradient-end) 100%
     );
-    animation: ascii-intro-out 180ms ease 1500ms forwards;
+    animation: ascii-intro-out var(--ascii-intro-fade) ease
+      var(--ascii-intro-hold) forwards;
   }
   .ascii-intro__content {
     width: 100%;
